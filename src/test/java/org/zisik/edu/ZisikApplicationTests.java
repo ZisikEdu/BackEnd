@@ -1,4 +1,4 @@
-package com.zisik.edu;
+package org.zisik.edu;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

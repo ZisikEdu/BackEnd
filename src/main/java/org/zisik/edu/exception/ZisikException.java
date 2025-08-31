@@ -1,4 +1,4 @@
-package com.zisik.edu.exception;
+package org.zisik.edu.exception;
 
 import lombok.Getter;
 
