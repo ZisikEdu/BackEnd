@@ -15,11 +15,9 @@ import java.util.List;
 
 @Entity
 @SuperBuilder
-@PrimaryKeyJoinColumn(name = "id")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@PrimaryKeyJoinColumn(name = "id")
 public class OAuthAccount extends Account {
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     private String provider;
     private String providerUserid;
@@ -27,13 +25,11 @@ public class OAuthAccount extends Account {
     private String refresh_token;
     private String linkedAt;
 
-    @Builder
     public OAuthAccount(
             String accountId,
             String password,
             String email,
             String username,
-            UserProfile userProfile,
             UserProfile profile,
             Role role,
             String provider,
@@ -41,12 +37,11 @@ public class OAuthAccount extends Account {
             String linkedAt)
     {
         this.accountId = accountId;
-        this.password = passwordEncoder.encode(password);
+        this.password = password;
         this.email = email;
         this.username = username;
         this.createAt = LocalDateTime.now();
         this.updateAt = LocalDateTime.now();
-        this.userProfile = userProfile;
         this.profile = profile;
         this.role = role;
         this.provider = provider;

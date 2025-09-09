@@ -1,9 +1,12 @@
 package org.zisik.edu.user.domain;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserProfile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

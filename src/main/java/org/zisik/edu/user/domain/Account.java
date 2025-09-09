@@ -24,7 +24,8 @@ public abstract class Account {
     protected String username;
     protected LocalDateTime createAt;
     protected LocalDateTime updateAt;
-    protected UserProfile userProfile;
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_profile_id")
     protected UserProfile profile;
     protected Role role;
 }
