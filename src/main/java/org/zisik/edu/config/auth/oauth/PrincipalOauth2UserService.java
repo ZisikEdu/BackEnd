@@ -1,7 +1,7 @@
 package org.zisik.edu.config.auth.oauth;
 
-
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -12,64 +12,81 @@ import org.zisik.edu.config.auth.PrincipalDetails;
 import org.zisik.edu.config.auth.oauth.provider.GoogleUserInfo;
 import org.zisik.edu.config.auth.oauth.provider.NaverUserInfo;
 import org.zisik.edu.config.auth.oauth.provider.OAuth2UserInfo;
+import org.zisik.edu.user.domain.Account;
 import org.zisik.edu.user.domain.OAuthAccount;
 import org.zisik.edu.user.domain.Role;
-import org.zisik.edu.user.repository.AccountRepository;
+import org.zisik.edu.user.service.AccountService;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class PrincipalOauth2UserService extends DefaultOAuth2UserService {
 
-    @Autowired
-    PasswordEncoder passwordEncoder;
-    @Autowired
-    AccountRepository accountRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AccountService accountService;
 
-    // 구글로 부터 받은 userRequest 데이터에 대한 후처리되는 함수
-    // 함수 종료시 @AuthenticationPrincipal 어노테이션 만들어진다
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
-        //구글 로그인 버튼 클릭 -> 로그인 창 -> 로그인 완료 -> code를 리턴 (OAuth-client라이브러리) -> Access Token요청
-        //UserRequest 정보-> loadUser함수 호출-> 구글로부터 회원 프로필 받아준다
-        OAuth2UserInfo oAuth2UserInfo = null;
-        if(userRequest.getClientRegistration().getRegistrationId().equals("google")) {
-            oAuth2UserInfo = new GoogleUserInfo(oAuth2User.getAttributes());
-        }
-        if(userRequest.getClientRegistration().getRegistrationId().equals("naver")){
-            oAuth2UserInfo = new NaverUserInfo(oAuth2User.getAttributes());
-        }
 
-        assert oAuth2UserInfo != null;
+        log.info("OAuth2 로그인 시도: {}", userRequest.getClientRegistration().getRegistrationId());
 
-        String provider = oAuth2UserInfo.getProvider(); //google
+        OAuth2UserInfo oAuth2UserInfo = getOAuth2UserInfo(userRequest, oAuth2User);
+
+        String provider = oAuth2UserInfo.getProvider();
         String providerUserid = oAuth2UserInfo.getProviderId();
-        String username = provider+"_"+providerUserid; //google_123451687545465
+        String username = provider + "_" + providerUserid;
         String password = passwordEncoder.encode(username);
         String email = oAuth2UserInfo.getEmail();
-        Role role = Role.ROLE_USER;
+        Role role = Role.USER;
 
-        OAuthAccount userEntity = (OAuthAccount) accountRepository.findByUsername(username);
+        // 이메일 기반으로 계정 확인 (더 안전한 방식)
+        Optional<Account> existingAccount = accountService.findByEmail(email);
+        OAuthAccount accountEntity;
 
-        if(userEntity == null) {
-            System.out.println("구글 로그인 최초 입니다.");
-            userEntity = OAuthAccount.builder()
+        if (existingAccount.isEmpty()) {
+            log.info("새로운 OAuth2 사용자 생성: {}", email);
+
+            accountEntity = OAuthAccount.builder()
                     .username(username)
                     .password(password)
                     .email(email)
                     .providerUserid(providerUserid)
                     .provider(provider)
                     .role(role)
+                    .createAt(LocalDateTime.now())
+                    .updateAt(LocalDateTime.now())
+                    .linkedAt(LocalDateTime.now())
                     .build();
 
-            accountRepository.save(userEntity);
-        }
-        else {
-            System.out.println("이미 구글 계정으로 회원가입 실시 완료");
+            accountService.oauthJoin(accountEntity);
+
+        } else {
+            log.info("기존 사용자 OAuth2 로그인: {}", email);
+            accountEntity = (OAuthAccount) existingAccount.get();
         }
 
-        return new PrincipalDetails(userEntity,oAuth2User.getAttributes());
+        return new PrincipalDetails(accountEntity, oAuth2User.getAttributes());
     }
+
+    private static OAuth2UserInfo getOAuth2UserInfo(OAuth2UserRequest userRequest, OAuth2User oAuth2User) {
+        OAuth2UserInfo oAuth2UserInfo = null;
+        String registrationId = userRequest.getClientRegistration().getRegistrationId();
+
+        if ("google".equals(registrationId)) {
+            oAuth2UserInfo = new GoogleUserInfo(oAuth2User.getAttributes());
+        } else if ("naver".equals(registrationId)) {
+            oAuth2UserInfo = new NaverUserInfo(oAuth2User.getAttributes());
+        }
+
+        if (oAuth2UserInfo == null) {
+            throw new OAuth2AuthenticationException("지원하지 않는 OAuth2 제공자입니다: " + registrationId);
+        }
+        return oAuth2UserInfo;
+    }
+
+
 }

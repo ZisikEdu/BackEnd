@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.net.SocketOption;
 import java.time.LocalDateTime;
 import java.util.List;
 

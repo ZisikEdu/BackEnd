@@ -15,16 +15,4 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @PrimaryKeyJoinColumn(name = "id")
 public class LocalAccount extends Account {
-
-    //@Builder
-    public LocalAccount(String accountId, String password, String email, String username, LocalDateTime createAt, LocalDateTime updateAt, UserProfile userProfile, UserProfile profile, Role role) {
-        this.accountId = accountId;
-        this.password = password;
-        this.email = email;
-        this.username = username;
-        this.createAt = LocalDateTime.now();
-        this.updateAt = LocalDateTime.now();
-        this.profile = profile;
-        this.role = role;
-    }
 }

@@ -2,9 +2,11 @@ package org.zisik.edu.config.auth;
 
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.zisik.edu.user.domain.Account;
+import org.zisik.edu.user.domain.OAuthAccount;
 import org.zisik.edu.user.domain.Role;
 
 import java.util.*;
@@ -23,14 +25,20 @@ public class PrincipalDetails implements UserDetails, OAuth2User {
     private Account account; //콜 포지션
     private Map<String, Object> attributes = new HashMap<>();
 
-    //일반 로그인
-    public PrincipalDetails(Account user) {
-        this.account = user;
+    // 로컬 로그인용 생성자
+    public PrincipalDetails(Account account) {
+        this.account = account;
+        System.out.printf("PrincipalDetails 생성 (로컬 로그인): accountId={}, email={}",
+                account != null ? account.getAccountId() : "null",
+                account != null ? account.getEmail() : "null");
     }
-    //OAuth 로그인
-    public PrincipalDetails(Account user, Map<String, Object> attributes) {
-        this.account = user;
+
+    // OAuth2 로그인용 생성자
+    public PrincipalDetails(Account account, Map<String, Object> attributes) {
+        this.account = account;
         this.attributes = attributes;
+        System.out.printf("PrincipalDetails 생성 (OAuth2 로그인): email={}",
+                account != null ? account.getEmail() : "null");
     }
 
     //OAuth2User
@@ -42,31 +50,52 @@ public class PrincipalDetails implements UserDetails, OAuth2User {
 
     @Override
     public String getName() {
-        return null;//별로 중요하지 않음
+        // account가 null이면 attributes에서 이름을 가져오거나 기본값 반환
+        if (account != null && account.getUsername() != null) {
+            return account.getUsername();
+        }
+
+        // OAuth2의 경우 attributes에서 이름 추출 시도
+        if (attributes != null) {
+            String name = (String) attributes.get("name");
+            if (name != null) return name;
+
+            String email = (String) attributes.get("email");
+            if (email != null) return email;
+        }
+
+        return "unknown"; // 기본값
     }
 
     //UserDetails
     //해당 User 의 권한을 리턴
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        Collection<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new GrantedAuthority() {
-            @Override
-            public String getAuthority() {
-                return account.getRole().name();
-            }
-        });
-        return authorities;
+        if (account == null || account.getRole() == null) {
+            // 기본 권한 반환
+            return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+        }
+
+        return Collections.singletonList(
+                new SimpleGrantedAuthority("ROLE_" + account.getRole().name())
+        );
     }
 
     @Override
     public String getPassword() {
-        return account.getPassword();
+        return account != null ? account.getPassword() : "";
     }
 
     @Override
     public String getUsername() {
-        return account.getUsername();
+        if (account == null) {
+            return "unknown";
+        }
+
+        // accountId가 있으면 사용, 없으면 username 사용
+        return account.getAccountId() != null ?
+                account.getAccountId() :
+                (account.getUsername() != null ? account.getUsername() : "unknown");
     }
 
     //계정 만료

@@ -23,7 +23,7 @@ public class OAuthAccount extends Account {
     private String providerUserid;
     private String access_token;
     private String refresh_token;
-    private String linkedAt;
+    private LocalDateTime linkedAt;
 
     public OAuthAccount(
             String accountId,
@@ -46,6 +46,6 @@ public class OAuthAccount extends Account {
         this.role = role;
         this.provider = provider;
         this.providerUserid = providerUserid;
-        this.linkedAt = linkedAt;
+        this.linkedAt = LocalDateTime.now();
     }
 }

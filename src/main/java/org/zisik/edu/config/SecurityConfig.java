@@ -39,7 +39,12 @@ public class SecurityConfig {
                             .userInfoEndpoint(userInfoEndpoint ->
                                     userInfoEndpoint.userService(principalOauth2UserService)
                             );
-                });
+                }).logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/loginForm")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                );
 
         return http.build();
     }
