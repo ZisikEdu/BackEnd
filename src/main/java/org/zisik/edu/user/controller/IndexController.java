@@ -33,7 +33,6 @@ public class IndexController {
         System.out.println("/test/login ===========");
         PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
         System.out.println("authentication = " + principalDetails.getAccount());
-
         System.out.println("userDetails = " + userDetails.getAccount());
         return "세션 정보 확인 하기";
     }
@@ -82,14 +81,14 @@ public class IndexController {
     public @ResponseBody String join(SignUp signup) {
         System.out.println(signup);
         authService.signup(signup);
-        return "redirect:/loginForm";
+        return "loginForm";
     }
 
     @PostMapping("/login")
     public @ResponseBody String login(Login login) {
         System.out.println(login);
         authService.login(login);
-        return "redirect:/user";
+        return "/";
     }
 
     @PostMapping("/logout")

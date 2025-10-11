@@ -1,6 +1,7 @@
 package org.zisik.edu.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +14,7 @@ import org.zisik.edu.user.domain.Account;
 import org.zisik.edu.user.domain.LocalAccount;
 import org.zisik.edu.user.domain.Role;
 import org.zisik.edu.user.repository.AccountRepository;
+import org.zisik.edu.user.service.AccountService;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -21,19 +23,19 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final AccountRepository accountRepository;
+    private final AccountService accountService;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public void signup(SignUp signup) {
-        Optional<Account> userOptional = accountRepository.findByAccountId(signup.getAccountId());
+        Optional<Account> userOptional = accountService.findByAccountId(signup.getAccountId());
         if (userOptional.isPresent()) {
             throw new AlreadyExistsAccountException();
         }
 
         String encryptedPassword = passwordEncoder.encode(signup.getPassword());
 
-        accountRepository.save(LocalAccount.builder()
+        accountService.join(LocalAccount.builder()
                 .accountId(signup.getAccountId())
                 .username(signup.getUsername())
                 .password(encryptedPassword)
@@ -52,7 +54,7 @@ public class AuthService {
 
     public void login(Login login) {
         // 사용자 존재 확인
-        Account account = accountRepository.findByAccountId(login.getAccountId())
+        Account account = accountService.findByAccountId(login.getAccountId())
                 .orElseThrow(() -> {
                     System.out.printf("존재하지 않는 계정 - accountId: {}", login.getAccountId());
                     return new UserNotFound();

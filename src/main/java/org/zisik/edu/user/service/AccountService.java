@@ -1,8 +1,10 @@
 package org.zisik.edu.user.service;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.zisik.edu.user.domain.Account;
+import org.zisik.edu.user.domain.LocalAccount;
 import org.zisik.edu.user.domain.OAuthAccount;
 import org.zisik.edu.user.repository.AccountRepository;
 import org.zisik.edu.exception.*;
@@ -34,5 +36,15 @@ public class AccountService {
     public Optional<Account> findByEmail(String email) {
         Account account = accountRepository.findByEmail(email);
         return Optional.ofNullable(account);
+    }
+
+    public Optional<Account> findByAccountId(@NotBlank(message = "아이디 입력해주세요") String accountId) {
+        return accountRepository.findByAccountId(accountId);
+    }
+
+    public LocalAccount join(LocalAccount accountEntity) {
+        accountEntity.validate();
+        accountRepository.save(accountEntity);
+        return accountEntity;
     }
 }

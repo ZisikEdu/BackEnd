@@ -12,4 +12,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     Account findByUsername(String username);
     Optional<Account> findByAccountId(@NotBlank(message = "아이디 입력해주세요") String accountId);
     Account findByEmail(String email);
+
+    Object existsByAccountId(String accountId);
+
+    Object existsByEmail(String email);
 }
