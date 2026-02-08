@@ -22,6 +22,8 @@ public class BookSearch {
     @Builder.Default
     private Integer size = 10;
 
+    private String query;  // 검색어 (제목, 저자, ISBN)
+
     public void setPage(Integer page) {
         this.page = page <= 0 ? 1 : min(page, MAX_PAGE);
     }

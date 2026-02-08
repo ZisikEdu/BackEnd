@@ -13,6 +13,9 @@ public class InvalidRequest extends ZisikException {
         super(MESSAGE);
     }
 
+    public InvalidRequest(String message) {
+        super(message);
+    }
     public InvalidRequest(String fieldName,String message) {
         super(MESSAGE);
         addValidation(fieldName,message);
