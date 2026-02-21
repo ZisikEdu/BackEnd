@@ -1,0 +1,22 @@
+package org.zisik.edu.annotation;
+
+import org.springframework.security.test.context.support.WithSecurityContext;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
+
+@Retention(RetentionPolicy.RUNTIME)
+@WithSecurityContext(factory = ZisikMockSecurityContext.class)
+public @interface ZisikMockUser {
+
+    String account() default "daile1234";
+
+    String password() default "password1234";
+
+    String email() default "daile1234@gmail.com";
+
+    String name() default "김동혁";
+
+    //String role() default "ROLE_ADMIN";
+}
